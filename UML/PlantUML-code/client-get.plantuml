@@ -1,6 +1,6 @@
 @startuml ClientUMLlist
 
-title 'get' request
+title Client 'get' request
 
 actor Client as Client
 database Server as Server
@@ -29,7 +29,7 @@ group Error [If status = 1 or 2]
     and end the request process
     end note
     Server -[#Black]> Server : End the process
-    Client -[#Black]> Client : Print error and end the process
+    Client -[#Red]> Client : Print error and end the process
     note left
     The server send the number of the status in a string 
     and end the request process
@@ -43,11 +43,29 @@ group Get file [If status = 0]
     note left
     The client gets ready to get the packets from server.
     end note
+    Client -[#Black]> Client : Open file with name <filename>
     loop until all the file is sent
-        Client <[#Blue]- Server : UDP, 1024 MAX bytes
+        Server -[#Blue]> Client : UDP, 1024 MAX bytes
+        Client -[#Black]> Client : Write the bytes in file
+        Server -[#Black]> Server : packet_send + 1
+        Client -[#Black]> Client : packet_received + 1
+    end
+    Server -[#Blue]> Client : UDP encoded in UTF-8
+    note left
+    The client wait for the packet_send number,
+    if match with packet_received, end succesfully the operation
+    if not, deletes the corrupted file and end the operation with error
+    end note
+    note right
+    The server send the packet_send number.
+    end note
+    group Error [If not equal packet number]
+    Client -[#Red]> Client : Delete the corrupted file, print error and end process
+    end
+    group Keep the data [If equal packet number]
+    Client -[#Black]> Client : End the process
     end
     Server -[#Black]> Server : End the process
-    Client -[#Black]> Client : Trigger timeout and end the process
 end
 
 @enduml
