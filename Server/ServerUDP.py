@@ -37,6 +37,7 @@ def getFromClient(filename):
     filename, client_address = server_socket.recvfrom(BUFFER_SIZE)
     download_data = open(filename.decode('utf-8'), 'wb')
     packet, client_address = server_socket.recvfrom(BUFFER_SIZE)
+    download_data.write(packet)
     packet_received = 0
     try:
         while(packet):
