@@ -22,10 +22,10 @@ def sendToClient(filename, client_address):
     print(">> Sending data...")
     packet_sent = 0
     while (packet):
-        if(server_socket.sendto(packet, client_address)):
-            packet_sent = packet_sent + 1
-            print(">> Sending...")
-            packet = data.read(BUFFER_SIZE)
+        (server_socket.sendto(packet, client_address)):
+        packet_sent = packet_sent + 1
+        print(">> Sending...")
+        packet = data.read(BUFFER_SIZE)
     data.close()
     time.sleep(3)
     server_socket.sendto(str(packet_sent).encode('utf-8'), client_address)

@@ -52,11 +52,11 @@ def sendToServer(filename):
     packet = data.read(BUFFER_SIZE)
     print(">> Sending data...")
     packet_sent = 0
-    while (packet):
-        if(client_socket.sendto(packet, server_address)):
-            packet_sent = packet_sent + 1
-            print(">> Sending...")
-            packet = data.read(BUFFER_SIZE)
+    while packet:
+        client_socket.sendto(packet, server_address):
+        packet_sent = packet_sent + 1
+        print(">> Sending...")
+        packet = data.read(BUFFER_SIZE)
     data.close()
     time.sleep(3)
     client_socket.sendto(str(packet_sent).encode('utf-8'), server_address)
