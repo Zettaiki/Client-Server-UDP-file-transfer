@@ -1,0 +1,53 @@
+@startuml ClientUMLlist
+
+title 'get' request
+
+actor Client as Client
+database Server as Server
+Client -[#Black]> Client : Start Client
+Server -[#Black]> Server : Start Server
+note right
+The server starts with ip 127.0.0.1 and port 4444.
+end note
+Client -[#Blue]> Server : UDP encoded in UTF-8
+note left
+The client send the string "get <filename>" to 
+127.0.0.1 with port 4444.
+end note
+Server -[#Black]> Server : Search for file
+note right
+The server search for the filename requested.
+If the file exists = Send '0' as response
+If the directory is empty = Send '1' as response
+If the file dont exist = Send '1' as response
+end note
+Client -[#Black]> Client : Wait status from server
+group Error [If status = 1 or 2]
+    Client <[#Red]- Server : UDP encoded in UTF-8
+    note right
+    The server send the number of the status in a string 
+    and end the request process
+    end note
+    Server -[#Black]> Server : End the process
+    Client -[#Black]> Client : Print error and end the process
+    note left
+    The server send the number of the status in a string 
+    and end the request process
+    end note
+end
+group Get file [If status = 0]
+    Client <[#Blue]- Server : UDP encoded in UTF-8
+    note right
+    The server send the status in a string, accepting the request.
+    end note
+    note left
+    The client gets ready to get the packets from server.
+    end note
+    loop until all the file is sent
+        Client <[#Blue]- Server : UDP, 1024 MAX bytes
+    end
+    Server -[#Black]> Server : End the process
+    Client -[#Black]> Client : Trigger timeout and end the process
+end
+
+@enduml
