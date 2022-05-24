@@ -47,8 +47,6 @@ def getFromServer():
 # Method that send the file requested to the server.
 def sendToServer(filename):
     data = open(filename, 'rb')
-    print(">> Sending filename...")
-    client_socket.sendto(filename.encode('utf-8'), server_address)
     packet = data.read(BUFFER_SIZE)
     print(">> Sending data...")
     packet_sent = 0
@@ -93,7 +91,7 @@ while True:
     if client_request[0] == 'get':
         client_socket.sendto(client_message.encode('utf-8'), server_address)
         print(">> Querying file...")
-        getFromServer()
+        getFromServer(client_request[1])
         continue
     
     if client_request[0] == 'put':

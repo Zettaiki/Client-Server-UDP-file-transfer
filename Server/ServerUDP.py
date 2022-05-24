@@ -34,7 +34,6 @@ def sendToClient(filename, client_address):
 
 # Method that gets a file and store it in the server
 def getFromClient(filename):
-    filename, client_address = server_socket.recvfrom(BUFFER_SIZE)
     download_data = open(filename.decode('utf-8'), 'wb')
     packet, client_address = server_socket.recvfrom(BUFFER_SIZE)
     download_data.write(packet)
