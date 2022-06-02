@@ -1,3 +1,32 @@
+@startuml ClientListUML
+
+title Client 'list' request
+
+actor Client as Client
+database Server as Server
+Client -[#Black]> Client : Start Client
+Server -[#Black]> Server : Start Server
+note right
+The server starts with ip 127.0.0.1 and port 4444.
+end note
+Client -[#Blue]> Server : UDP encoded in UTF-8
+note left
+The client send the string "list" to 
+127.0.0.1 with port 4444.
+end note
+Server -[#Black]> Server : Get the directory
+note right
+The server generates a list[str] with all the filenames and convert to str.
+end note
+Client <[#Blue]- Server : UDP encoded in UTF-8
+note right
+The server send the list in a string format, encoded in UTF-8.
+end note
+Server -[#Black]> Server : End the process
+Client -[#Black]> Client : Print list and end the process
+
+@enduml
+
 @startuml ClientGetUML
 
 title Client 'get' request
@@ -62,6 +91,62 @@ group Get file [If status = 0]
     Client -[#Black]> Client : End the process
     end
     Server -[#Black]> Server : End the process
+end
+
+@enduml
+
+@startuml ClientPutUML
+
+title Client 'put' request
+
+actor Client as Client
+database Server as Server
+Client -[#Black]> Client : Start Client
+Server -[#Black]> Server : Start Server
+note right
+The server starts with ip 127.0.0.1 and port 4444.
+end note
+Client -[#Black]> Client  : Search for file
+note left
+The client search for the filename requested.
+If not, print error
+If yes, send the request to server
+end note
+group Error [If status = 1 or 2]
+    Client -[#Red]> Client  : Print error and end the process
+end
+group Send file [If status = 0]
+    Client -[#Blue]> Server : UDP encoded in UTF-8
+    note left
+    The client send the string "put <filename>" to 
+    127.0.0.1 with port 4444.
+    end note
+    note right
+    The server gets ready to receive the files
+    end note
+    Server -[#Black]> Server : Open file with name <filename>
+    loop until all the file is sent
+        Client -[#Blue]> Server : UDP, 1024 MAX bytes
+        Server -[#Black]> Server : Write the bytes in file
+        Client -[#Black]> Client : packet_send + 1
+        Server -[#Black]> Server : packet_received + 1
+    end
+    Client -[#Blue]> Server : UDP, integer
+    note left
+    The client send the packet_send number.
+    end note
+    note right
+    The server wait for the packet_send number,
+    if match with packet_received, end succesfully the operation
+    if not, deletes the corrupted file and end the operation with error
+    end note
+    group Error [If not equal packet number]
+    Server -[#Red]> Server : Delete the corrupted file, print error and end process
+    end
+    group Keep the data [If equal packet number]
+    Server -[#Black]> Server : End the process
+    end
+    Client -[#Black]> Client : End the process
 end
 
 @enduml
