@@ -51,7 +51,7 @@ def sendToServer(filename):
     print(">> Sending data...")
     packet_sent = 0
     while packet:
-        client_socket.sendto(packet, server_address):
+        client_socket.sendto(packet, server_address)
         packet_sent = packet_sent + 1
         print(">> Sending...")
         packet = data.read(BUFFER_SIZE)
