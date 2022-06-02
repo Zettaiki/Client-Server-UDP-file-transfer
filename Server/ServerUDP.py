@@ -28,7 +28,7 @@ def sendToClient(filename, client_address):
         packet = data.read(BUFFER_SIZE)
     data.close()
     time.sleep(3)
-    server_socket.sendto(str(packet_sent).encode('utf-8'), client_address)
+    server_socket.sendto(int(packet_sent), client_address)
     print(">> Sending complete!")
     return
 
@@ -49,7 +49,7 @@ def getFromClient(filename):
         print(">> Checking file integrity...")
         server_socket.settimeout(5)
         ack_num, client_address = server_socket.recvfrom(BUFFER_SIZE)
-        if packet_received == int(ack_num.decode('utf-8')):
+        if packet_received == int(ack_num):
             print(">> File Downloaded!")
             return
         
@@ -64,19 +64,19 @@ def checkFileExist(filename, client_address):
 
     if len(os.listdir('.')) == 0:
         print(">> [Error]: Empty directory, error code = 1")
-        message = '1'
-        server_socket.sendto(message.encode('utf-8'), client_address)
+        message = int(1)
+        server_socket.sendto(message, client_address)
         return False
     
     if os.path.exists(filename):
         print('>> File found! ->', filename)
-        message = '0'
-        server_socket.sendto(message.encode('utf-8'), client_address)
+        message = int(0)
+        server_socket.sendto(message.encode, client_address)
         return True
 
     print(">> [Error]: File not found, error code = 2")
-    message = '2'
-    server_socket.sendto(message.encode('utf-8'), client_address)
+    message = int(2)
+    server_socket.sendto(message, client_address)
     return False
 
 # Main loop to get the order from the client.
