@@ -1,4 +1,4 @@
-@startuml ClientUMLlist
+@startuml ClientGetUML
 
 title Client 'get' request
 
@@ -23,22 +23,18 @@ If the file dont exist = Send '1' as response
 end note
 Client -[#Black]> Client : Wait status from server
 group Error [If status = 1 or 2]
-    Client <[#Red]- Server : UDP encoded in UTF-8
+    Client <[#Red]- Server : UDP, integer
     note right
-    The server send the number of the status in a string 
+    The server send the number of the status
     and end the request process
     end note
     Server -[#Black]> Server : End the process
     Client -[#Red]> Client : Print error and end the process
-    note left
-    The server send the number of the status in a string 
-    and end the request process
-    end note
 end
 group Get file [If status = 0]
-    Client <[#Blue]- Server : UDP encoded in UTF-8
+    Client <[#Blue]- Server : UDP, integer
     note right
-    The server send the status in a string, accepting the request.
+    The server send the status, accepting the request.
     end note
     note left
     The client gets ready to get the packets from server.
@@ -50,7 +46,7 @@ group Get file [If status = 0]
         Server -[#Black]> Server : packet_send + 1
         Client -[#Black]> Client : packet_received + 1
     end
-    Server -[#Blue]> Client : UDP encoded in UTF-8
+    Server -[#Blue]> Client : UDP, integer
     note left
     The client wait for the packet_send number,
     if match with packet_received, end succesfully the operation
