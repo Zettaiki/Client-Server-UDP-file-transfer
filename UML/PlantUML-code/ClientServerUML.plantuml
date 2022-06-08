@@ -52,7 +52,7 @@ If the file dont exist = Send '1' as response
 end note
 Client -[#Black]> Client : Wait status from server
 group Error [If status = 1 or 2]
-    Client <[#Red]- Server : UDP, integer
+    Client <[#Red]- Server : UDP encoded in UTF-8
     note right
     The server send the number of the status
     and end the request process
@@ -61,7 +61,7 @@ group Error [If status = 1 or 2]
     Client -[#Red]> Client : Print error and end the process
 end
 group Get file [If status = 0]
-    Client <[#Blue]- Server : UDP, integer
+    Client <[#Blue]- Server : UDP encoded in UTF-8
     note right
     The server send the status, accepting the request.
     end note
@@ -75,7 +75,7 @@ group Get file [If status = 0]
         Server -[#Black]> Server : packet_send + 1
         Client -[#Black]> Client : packet_received + 1
     end
-    Server -[#Blue]> Client : UDP, integer
+    Server -[#Blue]> Client : UDP encoded in UTF-8
     note left
     The client wait for the packet_send number,
     if match with packet_received, end succesfully the operation
@@ -131,7 +131,7 @@ group Send file [If status = 0]
         Client -[#Black]> Client : packet_send + 1
         Server -[#Black]> Server : packet_received + 1
     end
-    Client -[#Blue]> Server : UDP, integer
+    Client -[#Blue]> Server : UDP encoded in UTF-8
     note left
     The client send the packet_send number.
     end note
