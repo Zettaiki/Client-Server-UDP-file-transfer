@@ -12,8 +12,18 @@ server_address = (ip, port)
 server_socket.bind(server_address)
 print(">> Server online.")
 
+# Function that check the integrity of a received file
+def checkFileIntegrity(filename, client_hash): 
+    md5_hash = hashlib.md5() 
+    with open(filename,"rb") as f:
+        for byte_block in iter(lambda: f.read(4096),b""):
+            md5_hash.update(byte_block)
+        server_hash = md5_hash.hexdigest()
+        return server_hash == client_hash
+
 # Method that send the file requested to the client.
 def sendToClient(filename, client_address):
+    #calculate hash of the file to send
     md5_hash = hashlib.md5() 
     with open(filename,"rb") as f:
         for byte_block in iter(lambda: f.read(4096),b""):
@@ -28,7 +38,6 @@ def sendToClient(filename, client_address):
     packet_sent = 0
     while (packet):
         (server_socket.sendto(packet, client_address))
-        packet_sent = packet_sent + 1
         print(">> Sending...")
         packet = data.read(BUFFER_SIZE)
     data.close()
@@ -53,8 +62,8 @@ def getFromClient(filename):
         download_data.close()
         print(">> Checking file integrity...")
         server_socket.settimeout(5)
-        ack_num, client_address = server_socket.recvfrom(BUFFER_SIZE)
-        if packet_received == int(ack_num.decode('utf-8')):
+        client_hash, client_address = server_socket.recvfrom(BUFFER_SIZE)
+        if checkFileIntegrity(filename ,str(client_hash.decode('utf-8'))):
             print(">> File Downloaded!") 
             message = 0
         else: 

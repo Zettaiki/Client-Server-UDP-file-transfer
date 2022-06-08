@@ -57,18 +57,23 @@ def getFromServer():
 
 # Function that send the file requested to the server.
 def sendToServer(filename):
+    #calculate hash of the file to send
+    md5_hash = hashlib.md5() 
+    with open(filename,"rb") as f:
+        for byte_block in iter(lambda: f.read(4096),b""):
+            md5_hash.update(byte_block)
+        client_hash = md5_hash.hexdigest()
+
     data = open(filename, 'rb')
     packet = data.read(BUFFER_SIZE)
     print(">> Sending data...")
-    packet_sent = 0
     while packet:
         client_socket.sendto(packet, server_address)
-        packet_sent = packet_sent + 1
         print(">> Sending...")
         packet = data.read(BUFFER_SIZE)
     data.close()
     time.sleep(3)
-    client_socket.sendto(str(packet_sent).encode('utf-8'), server_address)
+    client_socket.sendto(str(client_hash).encode('utf-8'), server_address)
     print(">> Sending complete!")
 
     #Check if the file was send correctly
