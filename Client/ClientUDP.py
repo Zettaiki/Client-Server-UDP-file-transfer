@@ -91,7 +91,7 @@ while True:
     if client_request[0] == 'get':
         client_socket.sendto(client_message.encode('utf-8'), server_address)
         print(">> Querying file...")
-        getFromServer(client_request[1])
+        getFromServer()
         continue
     
     if client_request[0] == 'put':
