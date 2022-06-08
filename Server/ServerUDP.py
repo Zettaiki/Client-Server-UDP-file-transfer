@@ -52,8 +52,6 @@ def getFromClient(filename):
         if packet_received == int(ack_num):
             print(">> File Downloaded!")
             return
-        
-        # TODO: set timeout to default
         print(">> [Error]: Packet loss, file corrupted. Deleting file and ending process")
         os.remove(filename)
         return
