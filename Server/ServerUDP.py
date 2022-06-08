@@ -28,13 +28,13 @@ def sendToClient(filename, client_address):
         packet = data.read(BUFFER_SIZE)
     data.close()
     time.sleep(3)
-    server_socket.sendto(int(packet_sent), client_address)
+    server_socket.sendto(str(packet_sent).encode('utf-8'), client_address)
     print(">> Sending complete!")
     return
 
 # Method that gets a file and store it in the server
 def getFromClient(filename):
-    download_data = open(filename.decode('utf-8'), 'wb')
+    download_data = open(filename, 'wb')
     packet, client_address = server_socket.recvfrom(BUFFER_SIZE)
     download_data.write(packet)
     packet_received = 0
@@ -49,7 +49,7 @@ def getFromClient(filename):
         print(">> Checking file integrity...")
         server_socket.settimeout(5)
         ack_num, client_address = server_socket.recvfrom(BUFFER_SIZE)
-        if packet_received == int(ack_num):
+        if packet_received == int(ack_num.decode('utf-8')):
             print(">> File Downloaded!")
             return
         print(">> [Error]: Packet loss, file corrupted. Deleting file and ending process")
@@ -62,19 +62,19 @@ def checkFileExist(filename, client_address):
 
     if len(os.listdir('.')) == 0:
         print(">> [Error]: Empty directory, error code = 1")
-        message = int(1)
-        server_socket.sendto(message, client_address)
+        message = 1
+        server_socket.sendto(str(message).encode('utf-8'), client_address)
         return False
     
     if os.path.exists(filename):
         print('>> File found! ->', filename)
-        message = int(0)
-        server_socket.sendto(message.encode, client_address)
+        message = 0
+        server_socket.sendto(str(message).encode('utf-8'), client_address)
         return True
 
     print(">> [Error]: File not found, error code = 2")
-    message = int(2)
-    server_socket.sendto(message, client_address)
+    message = 2
+    server_socket.sendto(str(message).encode('utf-8'), client_address)
     return False
 
 # Main loop to get the order from the client.

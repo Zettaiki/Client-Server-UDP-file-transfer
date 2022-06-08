@@ -15,10 +15,10 @@ print(">> Client online.")
 # Method that gets a file from the server and store it in the client directory.
 def getFromServer():
     status, server_address = client_socket.recvfrom(BUFFER_SIZE)
-    if int(status) == 1:
+    if int(status.decode('utf-8')) == 1:
         print(">> The server database is empty!")
         return
-    if int(status) == 2:
+    if int(status.decode('utf-8')) == 2:
         print(">> File not found in the server")
         return
     
@@ -37,7 +37,7 @@ def getFromServer():
         print(">> Checking file integrity...")
         client_socket.settimeout(5)
         ack_num, server_address = client_socket.recvfrom(BUFFER_SIZE)
-        if packet_received == int(ack_num):
+        if packet_received == int(ack_num.decode('utf-8')):
             print(">> File Downloaded!")
             return
         print(">> [Error]: Packet loss, file corrupted. Deleting file and ending process")
@@ -57,7 +57,7 @@ def sendToServer(filename):
         packet = data.read(BUFFER_SIZE)
     data.close()
     time.sleep(3)
-    client_socket.sendto(int(packet_sent), server_address)
+    client_socket.sendto(str(packet_sent).encode('utf-8'), server_address)
     print(">> Sending complete!")
     return
 
