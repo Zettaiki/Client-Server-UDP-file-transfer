@@ -1,20 +1,25 @@
 from socket import *
 import os
 import time
+import hashlib
 
 BUFFER_SIZE = 1024
 
 ip = "127.0.0.1"
 port = 4444
-
 server_socket = socket(AF_INET, SOCK_DGRAM)
 server_address = (ip, port)
 server_socket.bind(server_address)
-
 print(">> Server online.")
 
 # Method that send the file requested to the client.
 def sendToClient(filename, client_address):
+    md5_hash = hashlib.md5() 
+    with open(filename,"rb") as f:
+        for byte_block in iter(lambda: f.read(4096),b""):
+            md5_hash.update(byte_block)
+        server_hash = md5_hash.hexdigest()
+
     data = open(filename, 'rb')
     print(">> Sending filename...")
     server_socket.sendto(filename.encode('utf-8'), client_address)
@@ -28,7 +33,8 @@ def sendToClient(filename, client_address):
         packet = data.read(BUFFER_SIZE)
     data.close()
     time.sleep(3)
-    server_socket.sendto(str(packet_sent).encode('utf-8'), client_address)
+
+    server_socket.sendto(str(server_hash).encode('utf-8'), client_address)
     print(">> Sending complete!")
     return
 
@@ -49,10 +55,13 @@ def getFromClient(filename):
         server_socket.settimeout(5)
         ack_num, client_address = server_socket.recvfrom(BUFFER_SIZE)
         if packet_received == int(ack_num.decode('utf-8')):
-            print(">> File Downloaded!")
-            return
-        print(">> [Error]: Packet loss, file corrupted. Deleting file and ending process")
-        os.remove(filename)
+            print(">> File Downloaded!") 
+            message = 0
+        else: 
+            print(">> [Error]: Packet loss, file corrupted. Deleting file and ending process")
+            os.remove(filename)
+            message = 1
+        server_socket.sendto(str(message).encode('utf-8'), client_address)
         return
 
 # Method that check if file exist in directory. If not, send the error code to client.

@@ -1,18 +1,27 @@
+from pickle import TRUE
 from socket import *
 import os
 import time
+import hashlib
 
 BUFFER_SIZE = 1024
 
 ip = "127.0.0.1"
 port = 4444
-
 client_socket = socket(AF_INET, SOCK_DGRAM)
 server_address = (ip, port)
-
 print(">> Client online.")
 
-# Method that gets a file from the server and store it in the client directory.
+# Function that check the integrity of a received file
+def checkFileIntegrity(filename, server_hash): 
+    md5_hash = hashlib.md5() 
+    with open(filename,"rb") as f:
+        for byte_block in iter(lambda: f.read(4096),b""):
+            md5_hash.update(byte_block)
+        client_hash = md5_hash.hexdigest()
+        return client_hash == server_hash
+
+# Function that gets a file from the server and store it in the client directory.
 def getFromServer():
     status, server_address = client_socket.recvfrom(BUFFER_SIZE)
     if int(status.decode('utf-8')) == 1:
@@ -24,27 +33,29 @@ def getFromServer():
     
     filename, server_address = client_socket.recvfrom(BUFFER_SIZE)
     download_data = open(filename.decode('utf-8'), 'wb')
-    packet, server_address = client_socket.recvfrom(BUFFER_SIZE)
     packet_received = 0
+    packet, server_address = client_socket.recvfrom(BUFFER_SIZE) #DUBBIO ORDINE DI INCREMENTO NUMERO PACCHETTO
     try:
         while(packet):
+            download_data.write(packet) 
             packet_received = packet_received + 1
-            download_data.write(packet)
             client_socket.settimeout(2)
             packet, server_address = client_socket.recvfrom(BUFFER_SIZE)
     except timeout:
         download_data.close()
+
+        #Check downloaded file integrity
         print(">> Checking file integrity...")
         client_socket.settimeout(5)
-        ack_num, server_address = client_socket.recvfrom(BUFFER_SIZE)
-        if packet_received == int(ack_num.decode('utf-8')):
+        hash_server, server_address = client_socket.recvfrom(BUFFER_SIZE)
+        if checkFileIntegrity(filename ,str(hash_server.decode('utf-8'))):
             print(">> File Downloaded!")
-            return
-        print(">> [Error]: Packet loss, file corrupted. Deleting file and ending process")
-        os.remove(filename)
+        else:
+            print(">> [Error]: Packet loss, file corrupted. Deleting file and ending process")
+            os.remove(filename)
         return
 
-# Method that send the file requested to the server.
+# Function that send the file requested to the server.
 def sendToServer(filename):
     data = open(filename, 'rb')
     packet = data.read(BUFFER_SIZE)
@@ -59,9 +70,17 @@ def sendToServer(filename):
     time.sleep(3)
     client_socket.sendto(str(packet_sent).encode('utf-8'), server_address)
     print(">> Sending complete!")
+
+    #Check if the file was send correctly
+    error_status, client_address = client_socket.recvfrom(BUFFER_SIZE)
+    message = int(error_status.decode())
+    if message == 0: 
+        print(">> File send correctly")
+    else:
+        print(">> Failed file send, retry")
     return
 
-# Method that check if file exist in directory. If not, print the error and end the process.
+# Function that check if file exist in directory. If not, print the error and end the process.
 def checkFileExist(filename):
     print(">> Querying filenames in directory...")
 
@@ -75,6 +94,7 @@ def checkFileExist(filename):
 
     print(">> [Error]: File not found!")
     return False
+
 
 # Main loop to send the order to the server.
 while True:
