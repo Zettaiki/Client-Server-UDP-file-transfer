@@ -16,11 +16,15 @@ The client send the string "list" to
 end note
 Server -[#Black]> Server : Get the directory
 note right
-The server generates a list[str] with all the filenames and convert to str.
+The server generates a file with all the 
+filenames and send the file.
 end note
-Client <[#Blue]- Server : UDP encoded in UTF-8
+loop using get-put
+    Client <[#Blue]- Server : UDP, 1024 MAX bytes
+
+end
 note right
-The server send the list in a string format, encoded in UTF-8.
+The server send the file.
 end note
 Server -[#Black]> Server : End the process
 Client -[#Black]> Client : Print list and end the process
@@ -72,22 +76,19 @@ group Get file [If status = 0]
     loop until all the file is sent
         Server -[#Blue]> Client : UDP, 1024 MAX bytes
         Client -[#Black]> Client : Write the bytes in file
-        Server -[#Black]> Server : packet_send + 1
-        Client -[#Black]> Client : packet_received + 1
     end
-    Server -[#Blue]> Client : UDP encoded in UTF-8
+    Server -[#Blue]> Client : UDP, hashcode MD5
     note left
-    The client wait for the packet_send number,
-    if match with packet_received, end succesfully the operation
-    if not, deletes the corrupted file and end the operation with error
+    The client wait for the MD5 hashcode and compare the received hashcode
+    with the packet hashcode
     end note
     note right
-    The server send the packet_send number.
+    Server send a MD5 hashcode to check file integrity
     end note
-    group Error [If not equal packet number]
+    group Error [If not equal hashcode]
     Client -[#Red]> Client : Delete the corrupted file, print error and end process
     end
-    group Keep the data [If equal packet number]
+    group Keep the data [If equal hashcode]
     Client -[#Black]> Client : End the process
     end
     Server -[#Black]> Server : End the process
@@ -128,22 +129,22 @@ group Send file [If status = 0]
     loop until all the file is sent
         Client -[#Blue]> Server : UDP, 1024 MAX bytes
         Server -[#Black]> Server : Write the bytes in file
-        Client -[#Black]> Client : packet_send + 1
-        Server -[#Black]> Server : packet_received + 1
     end
-    Client -[#Blue]> Server : UDP encoded in UTF-8
+    Client -[#Blue]> Server : UDP, hashcode MD5
     note left
-    The client send the packet_send number.
+    Client send a MD5 hashcode to check file integrity
     end note
     note right
-    The server wait for the packet_send number,
-    if match with packet_received, end succesfully the operation
-    if not, deletes the corrupted file and end the operation with error
+    The server wait for the MD5 hashcode and compare the received hashcode
+    with the packet hashcode
+    Send 0 if equal, 1 if not equal
     end note
-    group Error [If not equal packet number]
+    group Error [If not equal hashcode]
+    Server -[#Red]> Client : UDP, encoded in UFT-8
     Server -[#Red]> Server : Delete the corrupted file, print error and end process
     end
-    group Keep the data [If equal packet number]
+    group Keep the data [If equal hashcode]
+    Server -[#Blue]> Client : UDP, encoded in UFT-8
     Server -[#Black]> Server : End the process
     end
     Client -[#Black]> Client : End the process
