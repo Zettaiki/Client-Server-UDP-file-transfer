@@ -29,6 +29,12 @@ def calculateHash(filename):
             md5_hash.update(byte_block)
         return md5_hash.hexdigest()
 
+def fileList():
+    f = open("list.txt", 'w')
+    for line in os.listdir(os.getcwd()):
+       f.writelines(line)
+    return f
+
 #Method that send the choosen file to the client.
 def sendToClient(filename, client_address):
     server_hash = calculateHash(filename)
@@ -108,9 +114,10 @@ while True:
     
     if client_request[0] == 'list':
         print(">> Getting list of files")
-        file_list = os.listdir('.')
+        f = fileList()
         print(">> Sending list to ", client_address)
-        server_socket.sendto(str(file_list).encode('utf-8'), client_address)
+        sendToClient(f, client_address)
+        os.remove(f.name)
         print(">> Completed!")
         continue
     
