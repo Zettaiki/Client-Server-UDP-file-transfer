@@ -1,3 +1,11 @@
+#Programmazione di reti 
+#Elaborato 2 
+#Componenti del gruppo: 
+#Pablo Sebastian Vargas Grateron Mat: 0000970487 Email: pablo.vargasgrateron@studio.unibo.it
+#Babboni Luca Mat: 0000971126 Email: luca.babboni2@studio.unibo.it
+
+#CLIENT
+
 from pickle import TRUE
 from socket import *
 import os
@@ -12,14 +20,13 @@ client_socket = socket(AF_INET, SOCK_DGRAM)
 server_address = (ip, port)
 print(">> Client online.")
 
-# Function that check the integrity of a received file
-def checkFileIntegrity(filename, server_hash): 
+#Function that calculate hash 
+def calculateHash(filename): 
     md5_hash = hashlib.md5() 
     with open(filename,"rb") as f:
         for byte_block in iter(lambda: f.read(4096),b""):
             md5_hash.update(byte_block)
-        client_hash = md5_hash.hexdigest()
-        return client_hash == server_hash
+        return md5_hash.hexdigest()
 
 # Function that gets a file from the server and store it in the client directory.
 def getFromServer():
@@ -31,14 +38,13 @@ def getFromServer():
         print(">> File not found in the server")
         return
     
+    #Recive package from server
     filename, server_address = client_socket.recvfrom(BUFFER_SIZE)
     download_data = open(filename.decode('utf-8'), 'wb')
-    packet_received = 0
-    packet, server_address = client_socket.recvfrom(BUFFER_SIZE) #DUBBIO ORDINE DI INCREMENTO NUMERO PACCHETTO
+    packet, server_address = client_socket.recvfrom(BUFFER_SIZE) 
     try:
         while(packet):
             download_data.write(packet) 
-            packet_received = packet_received + 1
             client_socket.settimeout(2)
             packet, server_address = client_socket.recvfrom(BUFFER_SIZE)
     except timeout:
@@ -48,7 +54,8 @@ def getFromServer():
         print(">> Checking file integrity...")
         client_socket.settimeout(5)
         hash_server, server_address = client_socket.recvfrom(BUFFER_SIZE)
-        if checkFileIntegrity(filename ,str(hash_server.decode('utf-8'))):
+        hash_client = calculateHash(filename)
+        if hash_client == str(hash_server.decode('utf-8')):
             print(">> File Downloaded!")
         else:
             print(">> [Error]: Packet loss, file corrupted. Deleting file and ending process")
@@ -57,13 +64,7 @@ def getFromServer():
 
 # Function that send the file requested to the server.
 def sendToServer(filename):
-    #calculate hash of the file to send
-    md5_hash = hashlib.md5() 
-    with open(filename,"rb") as f:
-        for byte_block in iter(lambda: f.read(4096),b""):
-            md5_hash.update(byte_block)
-        client_hash = md5_hash.hexdigest()
-
+    client_hash = calculateHash(filename)
     data = open(filename, 'rb')
     packet = data.read(BUFFER_SIZE)
     print(">> Sending data...")
@@ -73,6 +74,7 @@ def sendToServer(filename):
         packet = data.read(BUFFER_SIZE)
     data.close()
     time.sleep(3)
+    #ast packet send contains the client hash_code for integrity check
     client_socket.sendto(str(client_hash).encode('utf-8'), server_address)
     print(">> Sending complete!")
 

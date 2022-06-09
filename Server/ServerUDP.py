@@ -1,3 +1,12 @@
+#Programmazione di reti 
+#Elaborato 2 
+#Componenti del gruppo: 
+#Pablo Sebastian Vargas Grateron Mat: 0000970487 Email: pablo.vargasgrateron@studio.unibo.it
+#Babboni Luca Mat: 0000971126 Email: luca.babboni2@studio.unibo.it
+
+#SERVER
+
+
 from socket import *
 import os
 import time
@@ -12,49 +21,38 @@ server_address = (ip, port)
 server_socket.bind(server_address)
 print(">> Server online.")
 
-# Function that check the integrity of a received file
-def checkFileIntegrity(filename, client_hash): 
+#Function that calculate hash 
+def calculateHash(filename): 
     md5_hash = hashlib.md5() 
     with open(filename,"rb") as f:
         for byte_block in iter(lambda: f.read(4096),b""):
             md5_hash.update(byte_block)
-        server_hash = md5_hash.hexdigest()
-        return server_hash == client_hash
+        return md5_hash.hexdigest()
 
-# Method that send the file requested to the client.
+#Method that send the choosen file to the client.
 def sendToClient(filename, client_address):
-    #calculate hash of the file to send
-    md5_hash = hashlib.md5() 
-    with open(filename,"rb") as f:
-        for byte_block in iter(lambda: f.read(4096),b""):
-            md5_hash.update(byte_block)
-        server_hash = md5_hash.hexdigest()
-
+    server_hash = calculateHash(filename)
     data = open(filename, 'rb')
     print(">> Sending filename...")
     server_socket.sendto(filename.encode('utf-8'), client_address)
     packet = data.read(BUFFER_SIZE)
     print(">> Sending data...")
-    packet_sent = 0
     while (packet):
         (server_socket.sendto(packet, client_address))
         print(">> Sending...")
         packet = data.read(BUFFER_SIZE)
     data.close()
     time.sleep(3)
-
     server_socket.sendto(str(server_hash).encode('utf-8'), client_address)
     print(">> Sending complete!")
     return
 
-# Method that gets a file and store it in the server
+#Function that gets a file and store it in the server
 def getFromClient(filename):
     download_data = open(filename, 'wb')
     packet, client_address = server_socket.recvfrom(BUFFER_SIZE)
-    packet_received = 0
     try:
         while(packet):
-            packet_received = packet_received + 1
             download_data.write(packet)
             server_socket.settimeout(2)
             packet, client_address = server_socket.recvfrom(BUFFER_SIZE)
@@ -63,7 +61,8 @@ def getFromClient(filename):
         print(">> Checking file integrity...")
         server_socket.settimeout(5)
         client_hash, client_address = server_socket.recvfrom(BUFFER_SIZE)
-        if checkFileIntegrity(filename ,str(client_hash.decode('utf-8'))):
+        server_hash = calculateHash(filename)
+        if server_hash == str(client_hash.decode('utf-8')):
             print(">> File Downloaded!") 
             message = 0
         else: 
@@ -73,7 +72,7 @@ def getFromClient(filename):
         server_socket.sendto(str(message).encode('utf-8'), client_address)
         return
 
-# Method that check if file exist in directory. If not, send the error code to client.
+#Method that check if file exist in directory. If not, send the error code to client.
 def checkFileExist(filename, client_address):
     print(">> Querying filenames in directory...")
 
@@ -94,7 +93,7 @@ def checkFileExist(filename, client_address):
     server_socket.sendto(str(message).encode('utf-8'), client_address)
     return False
 
-# Main loop to get the order from the client.
+#Main loop to get the order from the client.
 while True:
     print("\n>> Waiting for client...")
     server_socket.settimeout(30)
