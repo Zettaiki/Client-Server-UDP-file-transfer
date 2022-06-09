@@ -13,6 +13,7 @@ import time
 import hashlib
 
 BUFFER_SIZE = 1024
+FILE_LIST_NAME = "list.txt"
 
 ip = "127.0.0.1"
 port = 4444
@@ -29,11 +30,13 @@ def calculateHash(filename):
             md5_hash.update(byte_block)
         return md5_hash.hexdigest()
 
-def fileList():
-    f = open("list.txt", 'w')
+def createFileList():
+    f = open(FILE_LIST_NAME, 'w')
     for line in os.listdir(os.getcwd()):
-       f.writelines(line)
-    return f
+       f.write(line)
+       f.write('\n')
+    f.close
+    return
 
 #Method that send the choosen file to the client.
 def sendToClient(filename, client_address):
@@ -82,7 +85,7 @@ def getFromClient(filename):
 def checkFileExist(filename, client_address):
     print(">> Querying filenames in directory...")
 
-    if len(os.listdir('.')) == 0:
+    if len(os.listdir(os.getcwd())) == 0:
         print(">> [Error]: Empty directory, error code = 1")
         message = 1
         server_socket.sendto(str(message).encode('utf-8'), client_address)
@@ -114,10 +117,11 @@ while True:
     
     if client_request[0] == 'list':
         print(">> Getting list of files")
-        f = fileList()
+        createFileList()
         print(">> Sending list to ", client_address)
-        sendToClient(f, client_address)
-        os.remove(f.name)
+        checkFileExist(FILE_LIST_NAME, client_address)
+        sendToClient(FILE_LIST_NAME, client_address)
+        os.remove(FILE_LIST_NAME)
         print(">> Completed!")
         continue
     
