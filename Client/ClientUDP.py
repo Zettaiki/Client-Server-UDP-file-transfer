@@ -52,15 +52,19 @@ def getFromServer():
 
         #Check downloaded file integrity
         print(">> Checking file integrity...")
-        client_socket.settimeout(5)
-        hash_server, server_address = client_socket.recvfrom(BUFFER_SIZE)
-        hash_client = calculateHash(filename)
-        if hash_client == str(hash_server.decode('utf-8')):
-            print(">> File Downloaded!")
-        else:
-            print(">> [Error]: Packet loss, file corrupted. Deleting file and ending process")
+        try:
+            client_socket.settimeout(5)
+            hash_server, server_address = client_socket.recvfrom(BUFFER_SIZE)
+            hash_client = calculateHash(filename)
+            if hash_client == str(hash_server.decode('utf-8')):
+                print(">> File Downloaded!")
+            else:
+                print(">> [Error]: Packet loss, file corrupted. Deleting file and ending process")
+                os.remove(filename)
+            return
+        except TimeoutError:
+            print(">> [Error]: Server timeout. Deleting file.")
             os.remove(filename)
-        return
 
 # Function that send the file requested to the server.
 def sendToServer(filename):
@@ -79,6 +83,7 @@ def sendToServer(filename):
     print(">> Sending complete!")
 
     #Check if the file was send correctly
+<<<<<<< Updated upstream
     error_status, client_address = client_socket.recvfrom(BUFFER_SIZE)
     message = int(error_status.decode())
     if message == 0: 
@@ -86,6 +91,19 @@ def sendToServer(filename):
     else:
         print(">> Failed file send, retry")
     return
+=======
+    try:
+        client_socket.settimeout(5)
+        error_status, client_address = client_socket.recvfrom(BUFFER_SIZE)
+        message = int(error_status.decode())
+        if message == 0: 
+            print(">> File send correctly")
+        else:
+            print(">> [Error] Failed file send")
+        return
+    except TimeoutError:
+        print(">> [Error]: Server timeout")
+>>>>>>> Stashed changes
 
 # Function that check if file exist in directory. If not, print the error and end the process.
 def checkFileExist(filename):
