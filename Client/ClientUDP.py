@@ -122,6 +122,7 @@ while True:
         print(">> Getting list from server")
         getFromServer()
         print(">> List of files in server directory: ")
+        print('\n')
         with open(FILE_LIST_NAME) as f:
             for line in f:
                 print(line)
