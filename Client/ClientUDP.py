@@ -105,49 +105,58 @@ def checkFileExist(filename):
 
 # Main loop to send the order to the server.
 while True:
-    client_message = input("\n>> To server => ")
-    client_request = client_message.split()
+    try:
+        client_socket.settimeout(30)
+        client_message = input("\n>> To server => ")
+        client_request = client_message.split()
 
-    if client_request[0] == 'list':
-        client_socket.sendto(client_message.encode('utf-8'), server_address)
-        print(">> Getting list from server")
-        list, server_address = client_socket.recvfrom(BUFFER_SIZE)
-        print(">> List of files in server: " , list.decode('utf-8'))
-        continue
-    
-    if client_request[0] == 'get':
-        client_socket.sendto(client_message.encode('utf-8'), server_address)
-        print(">> Querying file...")
-        getFromServer()
-        continue
-    
-    if client_request[0] == 'put':
-        if checkFileExist(client_request[1]):
-            print(">> Sending file to server...")
+        if client_request[0] == 'list':
             client_socket.sendto(client_message.encode('utf-8'), server_address)
-            sendToServer(client_request[1])
-
-    if client_request[0] == 'removelocal':
-        try:
-            os.remove(client_request[1])
-            print(">> ", client_request[1], " deleted. [local]")
+            print(">> Getting list from server")
+            try:
+                client_socket.settimeout(5)
+                list, server_address = client_socket.recvfrom(BUFFER_SIZE)
+                print(">> List of files in server: " , list.decode('utf-8'))
+            except TimeoutError:
+                print("[Error] Server timeout")
+                continue
+        
+        if client_request[0] == 'get':
+            client_socket.sendto(client_message.encode('utf-8'), server_address)
+            print(">> Querying file...")
+            getFromServer()
             continue
-        except FileNotFoundError:
-            print(">> [Error]: File not found. [local]")
+        
+        if client_request[0] == 'put':
+            if checkFileExist(client_request[1]):
+                print(">> Sending file to server...")
+                client_socket.sendto(client_message.encode('utf-8'), server_address)
+                sendToServer(client_request[1])
+
+        if client_request[0] == 'removelocal':
+            try:
+                os.remove(client_request[1])
+                print(">> ", client_request[1], " deleted. [local]")
+                continue
+            except FileNotFoundError:
+                print(">> [Error]: File not found. [local]")
+                continue
+
+        if client_request[0] == 'removeserver':
+            client_socket.sendto(client_message.encode('utf-8'), server_address)
+            status, server_address = client_socket.recvfrom(BUFFER_SIZE)
+            if int(status.decode('utf-8')) == 0:
+                print(">> ", client_request[1], " deleted. [remote]")
+            print(">> [Error] File not found. [remote]")
+
             continue
 
-    if client_request[0] == 'removeserver':
-        client_socket.sendto(client_message.encode('utf-8'), server_address)
-        status, server_address = client_socket.recvfrom(BUFFER_SIZE)
-        if int(status.decode('utf-8')) == 0:
-            print(">> ", client_request[1], " deleted. [remote]")
-        print(">> [Error] File not found. [remote]")
+        if client_request[0] == 'exit':
+            exit()
 
-        continue
+        if client_request[0] == 'exitserver':
+            client_socket.sendto(client_message.encode('utf-8'), server_address)
+            continue
 
-    if client_request[0] == 'exit':
-        exit()
-
-    if client_request[0] == 'exitserver':
-        client_socket.sendto(client_message.encode('utf-8'), server_address)
+    except TimeoutError:
         continue
