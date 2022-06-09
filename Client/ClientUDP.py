@@ -104,7 +104,7 @@ def checkFileExist(filename):
         print(">> [Error]: There are no files in the directory!")
         return False
 
-    if os.path.exists(filename):
+    if os.path.exists(filename) and filename != os.path.basename(__file__):
         print('>> File found! ->', filename)
         return True
 
@@ -125,7 +125,7 @@ while True:
         print('\n')
         with open(FILE_LIST_NAME) as f:
             for line in f:
-                print(line)
+                print('\t' + line)
         f.close
         os.remove(FILE_LIST_NAME)
         continue

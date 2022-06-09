@@ -33,7 +33,7 @@ def calculateHash(filename):
 def createFileList():
     f = open(FILE_LIST_NAME, 'w')
     for line in os.listdir(os.getcwd()):
-        if (line != FILE_LIST_NAME) & (line != os.path.basename(__file__)):
+        if (line != FILE_LIST_NAME) and (line != os.path.basename(__file__)):
             f.write(line)
             f.write('\n')
     f.close
@@ -92,7 +92,7 @@ def checkFileExist(filename, client_address):
         server_socket.sendto(str(message).encode('utf-8'), client_address)
         return False
     
-    if os.path.exists(filename) & (filename != os.path.basename(__file__)):
+    if os.path.exists(filename) and (filename != os.path.basename(__file__)):
         print('>> File found! ->', filename)
         message = 0
         server_socket.sendto(str(message).encode('utf-8'), client_address)
