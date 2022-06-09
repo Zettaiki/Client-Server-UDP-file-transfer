@@ -79,13 +79,17 @@ def sendToServer(filename):
     print(">> Sending complete!")
 
     #Check if the file was send correctly
-    error_status, client_address = client_socket.recvfrom(BUFFER_SIZE)
-    message = int(error_status.decode())
-    if message == 0: 
-        print(">> File send correctly")
-    else:
-        print(">> Failed file send, retry")
-    return
+    try:
+        client_socket.settimeout(5)
+        error_status, client_address = client_socket.recvfrom(BUFFER_SIZE)
+        message = int(error_status.decode())
+        if message == 0: 
+            print(">> File send correctly")
+        else:
+            print(">> Failed file send")
+        return
+    except TimeoutError:
+        print(">> [Error]: Server timeout")
 
 # Function that check if file exist in directory. If not, print the error and end the process.
 def checkFileExist(filename):
